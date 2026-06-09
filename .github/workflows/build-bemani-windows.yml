@@ -1,0 +1,78 @@
+name: Build MAME Bemani Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - bemani
+    paths:
+      - '.github/workflows/build-bemani-windows.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-gcc:
+    name: Build mame.exe for Windows / GCC
+    runs-on: windows-2022
+    timeout-minutes: 360
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git
+            make
+            zip
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-python
+            mingw-w64-x86_64-lld
+            mingw-w64-x86_64-llvm
+            mingw-w64-x86_64-libc++
+
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        env:
+          MINGW64: /mingw64
+          OVERRIDE_AR: llvm-ar
+          OVERRIDE_CC: gcc
+          OVERRIDE_CXX: g++
+          ARCHOPTS: -fuse-ld=lld
+          SUBTARGET: mame
+          TOOLS: 1
+        run: |
+          make -j3
+
+      - name: Validate
+        run: |
+          ./mame.exe -validate
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp mame.exe dist/
+          cp chdman.exe dist/
+          cp unidasm.exe dist/
+          cp COPYING dist/ || true
+          cp README.md dist/ || true
+          cd dist
+          zip -9 -r ../mame-bemani-windows-gcc-${GITHUB_SHA}.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mame-bemani-windows-gcc-${{ github.sha }}
+          path: mame-bemani-windows-gcc-${{ github.sha }}.zip
+          if-no-files-found: error
+          retention-days: 14
