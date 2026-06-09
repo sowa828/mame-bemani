@@ -11,6 +11,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-windows-gcc:
     name: Build mame.exe for Windows / GCC
@@ -38,7 +41,7 @@ jobs:
             mingw-w64-x86_64-libc++
 
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -70,7 +73,7 @@ jobs:
           zip -9 -r ../mame-bemani-windows-gcc-${GITHUB_SHA}.zip .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mame-bemani-windows-gcc-${{ github.sha }}
           path: mame-bemani-windows-gcc-${{ github.sha }}.zip
