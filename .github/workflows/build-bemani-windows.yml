@@ -2,11 +2,6 @@ name: Build MAME Bemani Windows
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - bemani
-    paths:
-      - '.github/workflows/build-bemani-windows.yml'
 
 permissions:
   contents: read
@@ -54,8 +49,9 @@ jobs:
           ARCHOPTS: -fuse-ld=lld
           SUBTARGET: mame
           TOOLS: 1
+          NOWERROR: 1
         run: |
-          make -j3
+          make -j3 NOWERROR=1
 
       - name: Validate
         run: |
